@@ -11,13 +11,11 @@ Load libraries and helper functions
 paper_path <- "/net/irizarryfs01/srv/export/irizarryfs01_backed_up/share_root/shicks/papers/qsmooth/"
 
 library(polyester)
-library(edgeR)
-library(Biostrings)
+library(zebrafishRNASeq)
 library(preprocessCore)
 library(quantro)
 library(qsmooth)
 library(genefilter)
-library(limma)
 library(abind)
 library(doParallel)
 library(ggplot2)
@@ -30,12 +28,6 @@ registerDoParallel(cores = nCores)
 workers <- getDoParWorkers()
 backend <- getDoParName()
 version <- getDoParVersion()
-
-acomb <- function(...) abind(..., along=3)
-comb <- function(x, a) {
-    lapply(seq_along(a), function(ii){
-        abind::abind(x[[ii]], a[[ii]], along = 2) })
-}
 
 # load gene-level read counts (3 control, 3 treated zebrafish)
 library(zebrafishRNASeq)
@@ -70,12 +62,9 @@ get_params <- function (counts, threshold = NULL)
     return(list(p0 = p0, mu = mu, size = size, fit = fit))
 }
 
-params = get_params(counts)
-
 # modify polyester::create_read_numbers to include sample-level scaling factor (scaleFac)
 create_read_numbers <- function(mu, fit, p0, m = NULL, n = NULL, 
-                                mod = NULL, beta = NULL, seed = NULL, 
-                                scaleFac = NULL) 
+                                mod = NULL, beta = NULL, seed = NULL) 
 {
     m = dim(beta)[1]
     n = dim(mod)[1]
@@ -95,7 +84,7 @@ create_read_numbers <- function(mu, fit, p0, m = NULL, n = NULL,
     counts = sizemat * NA
     for (i in 1:m) {
         counts[i, ] = rbinom(n, prob = (1 - p0s[i]), size = 1) * 
-            rnbinom(n, mu = 2^(mumat[i, ])*scaleFac, size = 2^(sizemat[i, ]))
+            rnbinom(n, mu = 2^(mumat[i, ]), size = 2^(sizemat[i, ]))
     }
     list(counts = counts, mumat = mumat, p0 = p0s)
 }
@@ -109,12 +98,17 @@ calculateMSERandom <- function(simDiffsObject, nGroups = 2)
     trueDiffObject <- simDiffsObject[,1,1]
     
     simMean = sapply(1:nMethods, function(x){ rowMeans(simDiffsObject[,(x+1),]) })
-    simBias = sapply(1:nMethods, function(x){ rowMeans(simDiffsObject[,(x+1),]) - trueDiffObject })
-    simMSE = sapply(1:nMethods, function(x){ rowMeans( (sweep(simDiffsObject[,(x+1),], 1, trueDiffObject, FUN = "-") )^2 ) })
+    simBias = sapply(1:nMethods, function(x){ rowMeans(simDiffsObject[,(x+1),]) -
+                                                       trueDiffObject })
+    simMSE = sapply(1:nMethods, 
+                    function(x){ rowMeans( (sweep(simDiffsObject[,(x+1),], 1, 
+                                                  trueDiffObject, FUN = "-") )^2 ) })
     simVar <- simMSE - (simBias)^2
 
     list( colMeans(simBias), colMeans((simBias)^2), colMeans(simVar), colMeans(simMSE))
 }
+
+params = get_params(counts) 
 ```
 
 ## Monte Carlo Simulation Study 
@@ -124,74 +118,102 @@ negative binomial.
 
 ```{r}
 # Generate an simulated data set of dim 1000x10 with two groups
-group = rep(c(-1, 1),each=10) # biological groups
+group = rep(c(-1, 1),each=10); nG <- length(group) # biological groups
 mod = model.matrix(~ -1 + group) # design matrix
 nGenes <- 1e3 # number of genes
-N <- 1000 # number of simulations
+N <- 100 # number of simulations (change to 1000 for faster results to check)
 nMethods <- 3 # compare raw, QN, qsmooth
-truthVal <- 1 # true LFC for DE genes
-pDiffMax <- c(0.01, 0.05, 0.10, 0.25, 0.50) # proportion of DE genes
+truthVal <- 2 # true LFC for DE genes
+pDiffMax <- c(0.05, 0.10, 0.25, 0.50, 0.75) # max proportion of DE genes
 
 dat = vector("list", length(pDiffMax))
 for(ind in 1:length(pDiffMax)){
-    set.seed(21)
+    set.seed(4321)
     pDiff <- runif(N, 0, pDiffMax[ind])
     simResults <- foreach(i = 1:N) %dopar% 
-        {
-    coeffs = cbind(c(rep(truthVal, floor(pDiff[i]*nGenes)), 
+      {
+        coeffs = cbind(c(rep(truthVal, floor(pDiff[i]*nGenes)), 
                      rep(0, nGenes - floor(pDiff[i]*nGenes))))
+        coeffs <- matrix(coeffs[sample(seq_len(nrow(coeffs))), 1], ncol = 1)
 
-    sFs <- runif(20, 1, sFsMax) 
-    simData <- create_read_numbers(mu = params$mu, fit = params$fit, 
-                    p0 = params$p0, beta=coeffs, mod=mod, scaleFac = sFs)
-    dat0 <- simData$counts
-    
-    # true difference in means of a zero-inflated NB 
-    trueDiff <- rowttests(simData$mumat, factor(group))$dm * (1-simData$p0) 
-    
-    simDiffs = array(0, dim = c(dim(coeffs)[1], 3))
-    
-    fit <- rowttests(log2(dat0+1), factor(group))
-    simDiffs[,1] <- fit$dm
-    
-    dat0.qn <- normalize.quantiles(dat0)
-    fit <- rowttests(log2(dat0.qn+1), factor(group))
-    simDiffs[,2] <- fit$dm
-    
-    dat0.qs <- qsmoothData(qsmooth(dat0, groupFactor = factor(group)))
-    fit <- rowttests(log2(dat0.qs+1), factor(group))
-    simDiffs[,3] <- fit$dm
+        sFsCols <- runif(nG, 1, 2)
+        sFs <- replicate(nG, c(rep(runif(1, 0.5, 3), length.out = nGenes/4),
+                               rep(runif(1, 0.5, 3), length.out = nGenes/4),
+                               rep(runif(1, 0.5, 3), length.out = nGenes/4), 
+                               rep(runif(1, 0.5, 3), length.out = nGenes/4)))
+        sFs <- sweep(sFs, 2, sFsCols, FUN = "*")
+        simData <- create_read_numbers(mu = params$mu, fit = params$fit, 
+                          p0 = params$p0, beta=coeffs, mod=mod)
 
-    return(cbind(trueDiff, simDiffs))
-    }
+        dat0.sort <- apply(simData$counts, 2, sort)
+        dat0.trans <- dat0.sort * sFs
+
+        for (i in 1:ncol(dat0.trans)) {
+            ref = dat0.trans[, i]
+            x = simDat$counts[, i]
+            rmin = rank(x, ties.method = "min")
+            dups = duplicated(rmin)
+            if (any(dups)) {
+              rrand = rank(x, ties.method = "random")
+              tied.ranks = unique(rmin[dups])
+              for (k in tied.ranks) {
+                sel = rrand[rmin == k]
+                ref[sel] = ave(ref[sel])
+              }
+            }
+            dat0.trans[, i] = ref[rmin]
+        }
+        dat0 <- dat0.trans
+        
+        # difference in means of a zero-inflated NB 
+        trueDiff <- rowttests(simData$mumat, factor(group))$dm * (1-simData$p0) 
+    
+        simDiffs = array(0, dim = c(dim(coeffs)[1], 3))
+    
+        fit <- rowttests(log2(dat0+1), factor(group))
+        simDiffs[,1] <- fit$dm
+    
+        dat0.qn <- normalize.quantiles(dat0)
+        fit <- rowttests(log2(dat0.qn+1), factor(group))
+        simDiffs[,2] <- fit$dm
+    
+        dat0.qs <- qsmoothData(qsmooth(dat0, groupFactor = factor(group)))
+        fit <- rowttests(log2(dat0.qs+1), factor(group))
+        simDiffs[,3] <- fit$dm
+
+        return(cbind(trueDiff, simDiffs))
+      }
     simDiffs <- abind(simResults, along = 3)
-    sumstats <- abs(abind(calculateMSERandom(simDiffs, nGroups = nG), along = 2))
-    colnames(sumstats) <- c("Bias", "Bias2", "Var", "MSE")
+    tmp <- abind(calculateMSERandom(simDiffs, nGroups = nG), along = 2)
+    colnames(tmp) <- c("Bias", "Bias2", "Var", "MSE")
+    tmp <- abs(tmp)
 
-    dat[[ind]] = data.frame(gather(as.data.frame(sumstats)),
-                 "method" = factor(rep(c("raw", "qn", "qsmooth"), 4), c("raw", "qn", "qsmooth")))
+    dat[[ind]] = data.frame(gather(as.data.frame(tmp)),
+                 "method" = factor(rep(c("raw", "qn", "qsmooth"), 4),
+                                   c("raw", "qn", "qsmooth")))
 }
 
 datAll <- cbind(do.call("rbind", dat), "pDiff" = rep(pDiffMax, each = 12))
+levels(datAll$method) <- c("Raw", "QN", "qsmooth")
 
+datAll <- datAll %>% filter(!(pDiff == "0.01"))
 pBias <- datAll %>% filter(key %in% c("Bias")) %>% 
     ggplot(aes(x = method, y = value, fill = method)) + geom_bar(stat = "identity") + 
     facet_wrap(~pDiff, nrow=1) + ylab("Bias") + xlab(" ") +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1))
-pMSE <- datAll %>% filter(key %in% c("MSE")) %>% 
-    ggplot(aes(x = method, y = value, fill = method)) + geom_bar(stat = "identity") + 
-    facet_wrap(~pDiff, nrow=1) + ylab("MSE") + xlab(" ") +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
+    guides(fill=guide_legend(title="Method"))
 pVar <- datAll %>% filter(key %in% c("Var")) %>% 
     ggplot(aes(x = method, y = value, fill = method)) + geom_bar(stat = "identity") + 
     facet_wrap(~pDiff, nrow=1) + ylab("Var") + xlab(" ") +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1))
-p <- plot_grid(pBias, pVar, pMSE, ncol=1, labels = LETTERS[1:3])
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
+    guides(fill=guide_legend(title="Method"))
+p <- plot_grid(pBias, pVar, ncol=1, labels = LETTERS[1:3])
+p
 
-pdf(paste0(paper_path, "SimStudy/Figures/Bias_Var.pdf"), width = 10, height = 10)
-print(p)
-dev.off()
+# pdf(paste0(paper_path, "SimStudy/Figures/Bias_Var.pdf"), width = 10, height = 10)
+# print(p)
+# dev.off()
+
 ```
-
 
 
