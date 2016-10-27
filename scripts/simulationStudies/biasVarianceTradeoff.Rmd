@@ -8,7 +8,7 @@ output: html_document
 Load libraries and helper functions
 
 ```{r}
-paper_path <- "/net/irizarryfs01/srv/export/irizarryfs01_backed_up/share_root/shicks/papers/qsmooth/"
+fig_path <- "/net/irizarryfs01/srv/export/irizarryfs01_backed_up/share_root/shicks/papers/qsmooth"
 
 library(polyester)
 library(zebrafishRNASeq)
@@ -210,9 +210,9 @@ pVar <- datAll %>% filter(key %in% c("Var")) %>%
 p <- plot_grid(pBias, pVar, ncol=1, labels = LETTERS[1:3])
 p
 
-# pdf(paste0(paper_path, "SimStudy/Figures/Bias_Var.pdf"), width = 10, height = 10)
-# print(p)
-# dev.off()
+pdf(file.path(fig_path, "Figures/Bias_Var.pdf"), width = 10, height = 10)
+print(p)
+dev.off()
 
 ```
 

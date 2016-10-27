@@ -1,0 +1,153 @@
+---
+title: "Supplemental Figures"
+output: html_document
+---
+
+
+# Supplemental Figure 1: Boxplots using bodymapRat data using raw, QN, qsmooth
+
+```{r}
+library(Biobase)
+library(bodymapRat) # load data set
+library(preprocessCore) # quantile normalize
+library(quantro) # test for global differences in distributions of spike-ins
+
+fig_path <- "/net/irizarryfs01/srv/export/irizarryfs01_backed_up/share_root/shicks/papers/qsmooth/"
+
+library(bodymapRat)
+data(bodymapRat)
+pd = pData(bodymapRat)
+
+# Select samples and filter genes
+sel = (pd$organ %in% c("Liver", "Brain")) & 
+      (pd$stage %in% c(21)) & (pd$sex %in% c("F", "M"))
+keep = rowSums(exprs(bodymapRat[, sel])) > 75
+subdataRat = bodymapRat[keep, sel]
+dim(subdataRat)
+
+## Density plot
+pdf(file.path(fig_path, "Figures/rat_boxplot_liver_brain1.pdf"), 
+    width = 8, height = 10)
+par(mfrow=c(3,2))
+par(mar=c(2, 2, 1, .5), mgp=c(0.7, 0.1, 0), tck=0.02)
+
+# raw (no normalization)
+lpcounts = log2(exprs(subdataRat) + 1)  
+matboxplot(lpcounts, groupFactor=pData(subdataRat)$organ, 
+           ylab="log2(count + 1)", xlab=" ")
+
+lpcounts.raw.ercc = lpcounts[grep("^ERCC", rownames(lpcounts)), ]
+matboxplot(lpcounts.raw.ercc, groupFactor=pData(subdataRat)$organ, 
+           ylab="log2(count + 1)", xlab=" ")
+
+# quantile normalization
+lpcounts = preprocessCore::normalize.quantiles(log2(exprs(subdataRat)+1))
+matboxplot(lpcounts, groupFactor=pData(subdataRat)$organ, 
+           ylab="log2(count + 1)", xlab=" ")
+
+lpcounts.qn.ercc = lpcounts[grep("^ERCC", rownames(lpcounts)), ]
+matboxplot(lpcounts.qn.ercc, groupFactor=pData(subdataRat)$organ, 
+           ylab="log2(count + 1)", xlab=" ")
+
+# qsmooth
+counts = exprs(subdataRat)
+lpcounts = qsmoothData(qsmooth(log2(counts+1), groupFactor = pData(subdataRat)$organ))
+matboxplot(lpcounts, groupFactor=pData(subdataRat)$organ, 
+           ylab="log2(count + 1)", xlab=" ")
+
+# spike-ins only
+lpcounts.qs.ercc = lpcounts[grep("^ERCC", rownames(lpcounts)), ]
+matboxplot(lpcounts.qs.ercc, groupFactor=pData(subdataRat)$organ, 
+           ylab="log2(count + 1)", xlab=" ")
+dev.off()
+
+```
+
+
+
+# Supplemental Figure 2: Boxplots using bodymapRat data using RLE, median, ERCC
+
+```{r}
+library(Biobase)
+library(bodymapRat) # load data set
+library(preprocessCore) # quantile normalize
+library(qsmooth) 
+library(quantro) # test for global differences in distributions of spike-ins
+
+fig_path <- "/net/irizarryfs01/srv/export/irizarryfs01_backed_up/share_root/shicks/papers/qsmooth/"
+
+library(bodymapRat)
+data(bodymapRat)
+pd = pData(bodymapRat)
+
+# Select samples and filter genes
+sel = (pd$organ %in% c("Liver", "Brain")) & 
+      (pd$stage %in% c(21)) & (pd$sex %in% c("F", "M"))
+keep = rowSums(exprs(bodymapRat[, sel])) > 75
+subdataRat = bodymapRat[keep, sel]
+dim(subdataRat)
+
+## Density plot
+pdf(file.path(fig_path, "Figures/rat_boxplot_liver_brain2.pdf"), 
+    width = 8, height = 10)
+par(mfrow=c(3,2))
+par(mar=c(2, 2, 1, .5), mgp=c(0.7, 0.1, 0), tck=0.02)
+
+# DESeq2 RLE normalization 
+lpcounts = log2(exprs(subdataRat) + 1)
+scal = apply(lpcounts - rowMeans(lpcounts), 2, median)
+lpcounts = t(t(lpcounts) - scal)
+matboxplot(lpcounts, groupFactor=pData(subdataRat)$organ, 
+           ylab="log2(count + 1)", xlab=" ")
+
+lpcounts.raw.ercc = lpcounts[grep("^ERCC", rownames(lpcounts)), ]
+matboxplot(lpcounts.raw.ercc, groupFactor=pData(subdataRat)$organ, 
+           ylab="log2(count + 1)", xlab=" ")
+
+# median normalization
+lpcounts = log2(exprs(subdataRat) + 1)
+lpcounts = t(t(lpcounts) - apply(lpcounts, 2, median))
+matboxplot(lpcounts, groupFactor=pData(subdataRat)$organ, 
+           ylab="log2(count + 1)", xlab=" ")
+
+lpcounts.qn.ercc = lpcounts[grep("^ERCC", rownames(lpcounts)), ]
+matboxplot(lpcounts.qn.ercc, groupFactor=pData(subdataRat)$organ, 
+           ylab="log2(count + 1)", xlab=" ")
+
+# scale by median of spike-ins
+counts = exprs(subdataRat)
+pcounts = counts + 1
+med.ercc = apply(pcounts[grep("^ERCC", rownames(pcounts)), ], 2, median)
+ercc.scaled.counts = t(t(pcounts) / med.ercc)
+ercc.scaled.counts = ercc.scaled.counts / min(ercc.scaled.counts)
+lpcounts = log2(ercc.scaled.counts)
+matboxplot(lpcounts, groupFactor=pData(subdataRat)$organ, 
+           ylab="log2(count + 1)", xlab=" ")
+
+lpcounts.qs.ercc = lpcounts[grep("^ERCC", rownames(lpcounts)), ]
+matboxplot(lpcounts.qs.ercc, groupFactor=pData(subdataRat)$organ, 
+           ylab="log2(count + 1)", xlab=" ")
+dev.off()
+
+```
+
+
+# Supplemental Figure 3: Density plot of GTEx data
+
+```{r}
+# Add Joe's code here
+
+```
+
+# Supplemental Figure 4: RMSE comparing QN and qsmooth on GTEx data
+
+```{r}
+# Add Joe's code here
+
+```
+
+
+# Supplemental Figure 5: Bias variance tradeoff 
+
+See the `biasVarianceTradeoff.Rmd` in the [qsmoothPaper/simulationStudies repository](https://github.com/stephaniehicks/qsmoothPaper/blob/master/scripts/simulationStudies/biasVarianceTradeoff.Rmd)
+
