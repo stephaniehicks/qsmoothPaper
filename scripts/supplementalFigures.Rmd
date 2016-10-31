@@ -134,17 +134,12 @@ dev.off()
 
 # Supplemental Figure 3: Density plot of GTEx data
 
-```{r}
-# Add Joe's code here
+Scripts for Supplemental Figure 3 are [available on Dropbox here](https://www.dropbox.com/sh/qs3dx36bbvcpufm/AADooxO7x0A89T6gGeH6oXvGa?dl=0). 
 
-```
 
 # Supplemental Figure 4: RMSE comparing QN and qsmooth on GTEx data
 
-```{r}
-# Add Joe's code here
-
-```
+Scripts for Supplemental Figure 4 are [available on Dropbox here](https://www.dropbox.com/sh/qs3dx36bbvcpufm/AADooxO7x0A89T6gGeH6oXvGa?dl=0). 
 
 
 # Supplemental Figure 5: Bias variance tradeoff 
