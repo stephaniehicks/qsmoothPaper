@@ -137,12 +137,7 @@ dev.off()
 Scripts for Supplemental Figure 3 are [available on Dropbox here](https://www.dropbox.com/sh/qs3dx36bbvcpufm/AADooxO7x0A89T6gGeH6oXvGa?dl=0). 
 
 
-# Supplemental Figure 4: RMSE comparing QN and qsmooth on GTEx data
-
-Scripts for Supplemental Figure 4 are [available on Dropbox here](https://www.dropbox.com/sh/qs3dx36bbvcpufm/AADooxO7x0A89T6gGeH6oXvGa?dl=0). 
-
-
-# Supplemental Figure 5: Bias variance tradeoff 
+# Supplemental Figure 4: Bias variance tradeoff 
 
 See the `biasVarianceTradeoff.Rmd` in the [qsmoothPaper/simulationStudies repository](https://github.com/stephaniehicks/qsmoothPaper/blob/master/scripts/simulationStudies/biasVarianceTradeoff.Rmd)
 
