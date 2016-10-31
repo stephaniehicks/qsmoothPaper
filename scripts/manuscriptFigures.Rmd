@@ -241,20 +241,12 @@ ks.test(c(lpcounts.qs.ercc[,pData(subdataRat)$organ %in% "Brain"]),
 
 # Figure 3: Density plots using GTEx data
 
-```{r}
-# Add Joe's code here
-
-```
+Scripts for Figure 3 are [available on Dropbox here](https://www.dropbox.com/sh/qs3dx36bbvcpufm/AADooxO7x0A89T6gGeH6oXvGa?dl=0). 
 
 
 # Figure 4: Gene-specific effects using GTEx data
 
-
-```{r}
-# Add Joe's code here
-
-```
-
+Scripts for Figure 4 are [available on Dropbox here](https://www.dropbox.com/sh/qs3dx36bbvcpufm/AADooxO7x0A89T6gGeH6oXvGa?dl=0). 
 
 # Figure 5: Density plots, boxplots and PCA plots using Flowsorted DNAm data
 
