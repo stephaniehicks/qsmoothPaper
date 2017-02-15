@@ -28,6 +28,8 @@ getdensity <- function(object) {
 
 
 #### smoking data set
+# Code to create the alveolarSmokingAffyData object can be found here: https://github.com/stephaniehicks/qsmoothPaper/tree/master/scripts/createDataObjects/create_alveolarSmokingAffyData.R
+# The alveolarSmokingAffyData object was saved into an R data package
 library(alveolarSmokingAffyData)
 data(alveolarSmokingAffyData)
 
@@ -65,6 +67,7 @@ dev.off()
 
 
 #### tcruzi data
+# Code to create the Tcruzi ExpressionSet object can be found here: https://github.com/stephaniehicks/qsmoothPaper/tree/master/scripts/createDataObjects/create_trcuziData.R
 load(file.path(fig_path, "tcruzi/tcruzi_eset.rda"))
 eset <- exprs(tcruzi.eset)
 pd <- pData(tcruzi.eset)
@@ -107,6 +110,8 @@ dev.off()
 
 
 #### brain and liver data set
+# Code to create the brain and liver Affy object can be found here:
+# https://github.com/stephaniehicks/qsmoothPaper/tree/master/scripts/createDataObjects/create_BrainandLiverData.md
 barcode_path <- "/net/irizarryfs01/srv/export/irizarryfs01_backed_up/share_root/ypitajuarez/Barcode/"
 
 pd <- readRDS(paste0(barcode_path, "/U133plus20/Annotation/Barcode3.tissue.RDS"))
