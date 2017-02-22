@@ -137,7 +137,159 @@ dev.off()
 Scripts for Supplemental Figure 3 are [available on Dropbox here](https://www.dropbox.com/sh/qs3dx36bbvcpufm/AADooxO7x0A89T6gGeH6oXvGa?dl=0). 
 
 
-# Supplemental Figure 4: Bias variance tradeoff 
+# Supplemental Figure 4: Density plots, boxplots and PCA plots using Flowsorted DNAm data (M values)
+
+```{r}
+fig_path <- "/net/irizarryfs01/srv/export/irizarryfs01_backed_up/share_root/shicks/papers/qsmooth/"
+
+library(FlowSorted.Blood.450k) # load data set
+library(quantro)
+library(qsmooth)
+
+# extract raw beta values
+cellcompMethyl <- preprocessRaw(updateObject(FlowSorted.Blood.450k))
+M <- getM(cellcompMethyl)
+pd = as.data.frame(pData(cellcompMethyl))
+
+IDs = c("CD8T","CD4T", "NK","Bcell","Mono","Gran")
+M0 = M[,which(pd$CellType %in% IDs)]
+pd0 = pd[which(pd$CellType %in% IDs),]
+
+# remove outlier DNAm sample
+M0 = M0[,-which(pd0$Sample_Name == "CD8+_105")]
+pd0 = pd0[-which(pd0$Sample_Name == "CD8+_105"),]
+
+tmp = apply(M0, 1, function(x){ any(x %in% c(-Inf, Inf)) })
+M0 <- na.omit(M0[!tmp, ])
+
+
+# create figure
+pdf(file.path(fig_path, "Figures/FlowSorted_density_boxplot_pca_Mvalues.pdf"),
+    width = 12, height = 12)
+
+# raw 
+par(mfrow=c(3,3))
+matdensity(M0, groupFactor = pd0$CellType, xlab = "M values", ylab = "density", 
+           main = "raw (no normalization)", xlim = c(-7, 7))
+legend('top', levels(factor(pd0$CellType)), lty = 1, col = 1:6, lwd = 3)
+
+matboxplot(M0, groupFactor = pd0$CellType, main = "raw (no normalization)", 
+          ylab = "M values", names = pd0$CellType)
+
+s.raw <- svd(M0)
+scores <- data.frame(pd0, s.raw$v[, 1:4])
+plot(scores$X1, scores$X2, pch = 16, col = c(1:6)[factor(pd0$CellType)], 
+     xlab = "PC1", ylab = "PC2",  main = "raw (no normalization)")
+
+# qn
+M0.qn <- preprocessCore::normalize.quantiles(M0)
+matdensity(M0.qn, groupFactor = pd0$CellType,  main = "quantile normalization", 
+           xlab = "M values", ylab = "density", xlim=c(-7, 7))
+legend('top', levels(factor(pd0$CellType)), lty = 1, col = 1:6, lwd = 3)
+matboxplot(M0.qn, groupFactor = pd0$CellType, main = "quantile normalization", 
+          ylab = "M values", names = pd0$CellType)
+s.qn <- svd(M0.qn)
+scores <- data.frame(pd0, s.qn$v[, 1:4])
+plot(scores$X1, scores$X2, pch = 16, col =  c(1:6)[factor(pd0$CellType)], 
+     xlab = "PC1", ylab = "PC2",  main = "quantile normalization")
+
+# qsmooth
+M0.qs <- qsmoothData(qsmooth(M0, groupFactor = factor(pd0$CellType)))
+matdensity(M0.qs, groupFactor = pd0$CellType, main = "qsmooth", 
+          xlab = "M values", ylab = "density", xlim=c(-7, 7))
+legend('top', levels(factor(pd0$CellType)), lty = 1, col = 1:6, lwd = 3)
+matboxplot(M0.qs, groupFactor = pd0$CellType, main = "qsmooth", 
+          ylab = "M values", names = pd0$CellType)
+s.qs <- svd(M0.qs)
+scores <- data.frame(pd0, s.qs$v[, 1:4])
+plot(scores$X1, scores$X2, pch = 16, col =  c(1:6)[factor(pd0$CellType)], 
+     xlab = "PC1", ylab = "PC2",  main = "qsmooth")
+dev.off()
+
+```
+
+
+# Supplemental Figure 5: Bias variance tradeoff 
 
 See the `biasVarianceTradeoff.Rmd` in the [qsmoothPaper/simulationStudies repository](https://github.com/stephaniehicks/qsmoothPaper/blob/master/scripts/simulationStudies/biasVarianceTradeoff.Rmd)
+
+
+# Supplemental Figure 6: normal and cancer bladder samples
+
+```{r}
+library(quantro)
+library(qsmooth)
+library(sva)
+library(bladderbatch)
+data(bladderdata)
+pd <- pData(bladderEset)
+
+bladderEset <- bladderEset[,pd$cancer %in% c("Cancer", "Normal")]
+pd <- pData(bladderEset)
+pd$cancer <- factor(pd$cancer)
+pd$batch <- factor(pd$batch)
+eset <- exprs(bladderEset)
+
+mod = model.matrix(~cancer, data=pd)
+mod0 = model.matrix(~1,data=pd)
+modBatch = model.matrix(~cancer + batch ,data=pd)
+mod0Batch = model.matrix(~batch,data=pd)
+
+table(pd$cancer, pd$batch)
+
+pdf(file.path(fig_path, "Figures/bladderbatch_density.pdf"),
+    width = 12, height = 8)
+par(mfrow=c(2,3))
+# raw (colors by cancer and by batch)
+matdensity(eset, pd$cancer, main = "No normalization\n(colored by cancer)", 
+           xlab = "Gene expression", ylab = "Density", ylim=c(0, 0.3))
+legend('topright', c("Cancer (n=40)", "Normal (n=8)"), lty = 1, col = 1:3, lwd = 3)
+matdensity(eset, pd$batch, main = "No normalization\n(colored by batch)", 
+           xlab = "Gene expression", ylab = "Density", ylim=c(0, 0.3))
+legend('topright', c("Batch 1 (n=11)", "Batch 2 (n=18)", "Batch 3 (n=4)", "Batch 5 (n=15)"), 
+       lty = 1, col = 1:5, lwd = 3)
+pValuesRaw = f.pvalue(eset,mod,mod0)
+qValuesRaw = p.adjust(pValuesRaw,method="BH")
+mean(qValuesRaw < 0.05)
+
+# combat
+combat_edata = ComBat(dat=eset, batch=pd$batch, mod=mod0)
+matdensity(combat_edata, pd$cancer, main = "Adjusted for batches using ComBat", 
+           xlab = "Gene expression", ylab = "Density", ylim=c(0, 0.3))
+legend('topright', c("Cancer (n=40)", "Normal (n=8)"), lty = 1, col = 1:3, lwd = 3)
+pValuesComBat = f.pvalue(combat_edata,mod,mod0)
+qValuesComBat = p.adjust(pValuesComBat,method="BH")
+mean(qValuesComBat < 0.05)
+
+# quantile normalize
+qn <- preprocessCore::normalize.quantiles(eset)
+matdensity(qn, pd$cancer, main = "Quantile Normalization", 
+           xlab = "Gene expression", ylab = "Density", ylim=c(0, 0.3))
+legend('topright', c("Cancer (n=40)", "Normal (n=8)"), lty = 1, col = 1:3, lwd = 3)
+
+pValuesQN = f.pvalue(qn,mod,mod0)
+qValuesQN = p.adjust(pValuesQN,method="BH")
+mean(qValuesQN < 0.05)
+
+# qsmooth with cancer status
+qsNorm <- qsmooth(eset, pd$cancer)
+matdensity(qsmoothData(qsNorm), pd$cancer, main = "qsmooth", 
+           xlab = "Gene expression", ylab = "Density", ylim=c(0, 0.3))
+legend('topright', c("Cancer (n=40)", "Normal (n=8)"), lty = 1, col = 1:3, lwd = 3)
+pValuesqsNorm = f.pvalue(qsmoothData(qsNorm), mod, mod0)
+qValuesqsNorm = p.adjust(pValuesqsNorm,method="BH")
+mean(qValuesqsNorm < 0.05)
+
+# qsmooth with cancer status, removing batch
+qsNorm.withoutBatch <- qsmooth(eset, pd$cancer, batch = pd$batch) # remove batch
+matdensity(qsmoothData(qsNorm.withoutBatch), pd$cancer, 
+           main = "qsmooth\n(After adjusting for batches using ComBat)",
+           xlab = "Gene expression", ylab = "Density", ylim=c(0, 0.3))
+legend('topright', c("Cancer (n=40)", "Normal (n=8)"), lty = 1, col = 1:3, lwd = 3)
+pValuesqsNorm.withoutBatch = f.pvalue(qsmoothData(qsNorm.withoutBatch), mod, mod0)
+qValuesqsNorm.withoutBatch = p.adjust(pValuesqsNorm.withoutBatch,method="BH")
+mean(qValuesqsNorm.withoutBatch < 0.05)
+
+dev.off()
+```
 
