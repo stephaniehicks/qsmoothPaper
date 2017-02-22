@@ -197,9 +197,9 @@ subdataRat = bodymapRat[keep, sel]
 dim(subdataRat)
 
 ## Density plot
-pdf(file.path(fig_path, "Figures/rat_density_liver_brain.pdf"), 
+pdf(file.path(fig_path, "Figures/rat_density_liver_brain.pdf"),
     width = 8, height = 10)
-par(mfrow=c(3,2))
+par(mfrow=c(1,1))
 par(mar=c(2, 2, 1, .5), mgp=c(0.7, 0.1, 0), tck=0.02)
 
 lpcounts = log2(exprs(subdataRat) + 1)  
@@ -212,6 +212,7 @@ matdensity(lpcounts.raw.ercc, groupFactor=pData(subdataRat)$organ,
            ylim = c(0, 0.13), xlab="log2(count + 1)", ylab=" ")
 
 lpcounts = preprocessCore::normalize.quantiles(log2(exprs(subdataRat)+1))
+rownames(lpcounts) <- rownames(exprs(subdataRat))
 matdensity(lpcounts, groupFactor=pData(subdataRat)$organ, 
            ylim = c(0, 0.17), xlab="log2(count + 1)", ylab=" ")
 
@@ -253,7 +254,7 @@ Scripts for Figure 3 are [available on Dropbox here](https://www.dropbox.com/sh/
 
 Scripts for Figure 4 are [available on Dropbox here](https://www.dropbox.com/sh/qs3dx36bbvcpufm/AADooxO7x0A89T6gGeH6oXvGa?dl=0). 
 
-# Figure 5: Density plots, boxplots and PCA plots using Flowsorted DNAm data
+# Figure 5: Density plots, boxplots and PCA plots using Flowsorted DNAm data (Beta values)
 
 ```{r}
 fig_path <- "/net/irizarryfs01/srv/export/irizarryfs01_backed_up/share_root/shicks/papers/qsmooth/"
@@ -276,13 +277,13 @@ p0 = p0[,-which(pd0$Sample_Name == "CD8+_105")]
 pd0 = pd0[-which(pd0$Sample_Name == "CD8+_105"),]
 
 # create figure
-pdf(file.path(fig_path, "Figures/FlowSorted_density_boxplot_pca.pdf"),
+pdf(file.path(fig_path, "Figures/FlowSorted_density_boxplot_pca_BetaValues.pdf"),
     width = 12, height = 12)
 
 # raw 
 par(mfrow=c(3,3))
 matdensity(p0, groupFactor = pd0$CellType, xlab = "beta values", ylab = "density", 
-           main = "raw (no normalization)")
+           main = "raw (no normalization)", xlim = c(-7, 7))
 legend('top', levels(factor(pd0$CellType)), lty = 1, col = 1:6, lwd = 3)
 
 matboxplot(p0, groupFactor = pd0$CellType, main = "raw (no normalization)", 
@@ -296,7 +297,7 @@ plot(scores$X1, scores$X2, pch = 16, col = c(1:6)[factor(pd0$CellType)],
 # qn
 p0.qn <- preprocessCore::normalize.quantiles(p0)
 matdensity(p0.qn, groupFactor = pd0$CellType,  main = "quantile normalization", 
-           xlab = "beta values", ylab = "density")
+           xlab = "beta values", ylab = "density", xlim=c(-7, 7))
 legend('top', levels(factor(pd0$CellType)), lty = 1, col = 1:6, lwd = 3)
 matboxplot(p0.qn, groupFactor = pd0$CellType, main = "quantile normalization", 
           ylab = "beta values", names = pd0$CellType)
