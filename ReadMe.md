@@ -17,6 +17,7 @@ Gene expression (Microarrays)
 
 * [alveolarSmokingAffyData](https://github.com/stephaniehicks/qsmoothPaper/tree/master/scripts/createDataObjects/create_alveolarSmokingAffyData.R). Gene expression of alveolar macrophages from 15 smokers, 15 nonsmokers, and 15 subjects with asthma (disease control). (GEO accession GSE2125) 
 * [brain and liver tissues](https://github.com/stephaniehicks/qsmoothPaper/tree/master/scripts/createDataObjects/create_BrainandLiverData.md). Gene expression of brain and liver tissues measured on Affymetrix arrays. (GEO accession IDs provided in linked file). 
+* [bladderbatch](https://www.bioconductor.org/packages/release/data/experiment/html/bladderbatch.html). R/Bioconductor data package containing gene expression data on normal and cancer bladder samples from multiple batches. 
 
 
 Gene expression (RNA-Seq)
