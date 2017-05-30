@@ -11,7 +11,7 @@ fig_path <- "/net/irizarryfs01/srv/export/irizarryfs01_backed_up/share_root/shic
 
 library(affy)
 library(dplyr)
-library(quantro)
+library(quantro) 
 library(qsmooth)
 library(preprocessCore)
 
@@ -49,26 +49,26 @@ lgroup <- c("Nonsmoker (n=15)", "Smoker (n=15)", "Asthmatic (n=15)")
 
 pdf(file.path(fig_path, "Figures/Figure1-supp/Figure1_smokerRaw.pdf"), width = 5, height = 4.5)
 matdensity(log2pmMat, groupFactor = pd$Group, xlab = "log2 PM values", 
-           ylab = " ", lwd = 2, ylim = c(0, 0.36))
-legend('topright', lgroup, lwd = 2, col = 1:3)
+           ylab = " ", lwd = 2, ylim = c(0, 0.36), lty = c(1,2,3)[factor(pd$Group)])
+legend('topright', lgroup, lwd = 2, col = 1:3, lty = c(1,2,3))
 dev.off()
 
 pdf(file.path(fig_path, "Figures/Figure1-supp/Figure1_smokerQN.pdf"), width = 5, height = 4.5)
 matdensity(log2pmMatQN, groupFactor = pd$Group, xlab = "log2 PM values", 
-           ylab = " ", lwd = 2, ylim = c(0, 0.36))
-legend('topright', levels(pd$Group), lwd = 2, col = 1:3)
+           ylab = " ", lwd = 2, ylim = c(0, 0.36), lty = c(1,2,3)[factor(pd$Group)])
+legend('topright', levels(pd$Group), lwd = 2, col = 1:3, lty = c(1,2,3))
 dev.off()
 
 pdf(file.path(fig_path, "Figures/Figure1-supp/Figure1_smokerQS.pdf"), width = 5, height = 4.5)
 matdensity(log2pmMatQS, groupFactor = pd$Group, xlab = "log2 PM values", 
-           ylab = " ", lwd = 2, ylim = c(0, 0.36))
-legend('topright', levels(pd$Group), lwd = 2, col = 1:3)
+           ylab = " ", lwd = 2, ylim = c(0, 0.36), lty = c(1,2,3)[factor(pd$Group)])
+legend('topright', levels(pd$Group), lwd = 2, col = 1:3, lty = c(1,2,3))
 dev.off()
 
 
 #### tcruzi data
 # Code to create the Tcruzi ExpressionSet object can be found here: https://github.com/stephaniehicks/qsmoothPaper/tree/master/scripts/createDataObjects/create_trcuziData.R
-load(file.path(fig_path, "tcruzi/tcruzi_eset.rda"))
+load(file.path(fig_path, "data/tcruzi/tcruzi_eset.rda"))
 eset <- exprs(tcruzi.eset)
 pd <- pData(tcruzi.eset)
 
@@ -89,23 +89,23 @@ log2pmMatQS <- log2(pmMatQS)
 
 pdf(file.path(fig_path,"Figures/Figure1-supp/Figure1_tcruziRaw.pdf"), width = 5, height = 4.5)
 matdensity(log2pmMat, groupFactor = pd$stage, xlab = "log2(count + 1)", 
-           ylab = " ", lwd = 2, ylim = c(0, 0.42))
+           ylab = " ", lwd = 2, ylim = c(0, 0.42), lty=c(1,2)[factor(pd$stage)])
 legend('topright', c("T. cruzi epimastigotes (n=3)", "Extracellular trypomastigotes (n=4)"), 
-      lwd = 2, col = 1:2)
+      lwd = 2, col = 1:2, lty=c(1,2))
 dev.off()
 
 pdf(file.path(fig_path,"Figures/Figure1-supp/Figure1_tcruziQN.pdf"), width = 5, height = 4.5)
 matdensity(log2pmMatQN, groupFactor = pd$stage, xlab = "log2(count + 1)", 
-           ylab = " ", lwd = 2, ylim = c(0, 0.42))
+           ylab = " ", lwd = 2, ylim = c(0, 0.42), lty=c(1,2)[factor(pd$stage)])
 legend('topright', c("T. cruzi epimastigotes", "Extracellular trypomastigotes"), 
-      lwd = 2, col = 1:2)
+      lwd = 2, col = 1:2, lty=c(1,2))
 dev.off()
 
 pdf(file.path(fig_path,"Figures/Figure1-supp/Figure1_tcruziQS.pdf"), width = 5, height = 4.5)
 matdensity(log2pmMatQS, groupFactor = pd$stage, xlab = "log2(count + 1)", 
-           ylab = " ", lwd = 2, ylim = c(0, 0.42))
+           ylab = " ", lwd = 2, ylim = c(0, 0.42), lty=c(1,2)[factor(pd$stage)])
 legend('topright', c("T. cruzi epimastigotes", "Extracellular trypomastigotes"), 
-      lwd = 2, col = 1:2)
+      lwd = 2, col = 1:2, lty=c(1,2))
 dev.off()
 
 
@@ -145,31 +145,36 @@ object <- log2pmMat[,c(73:82,11:18,42:53,1:10,19:41,54:72)]
 output <- getdensity(object)
 
 pdf(file.path(fig_path, "Figures/Figure1-supp/Figure1_brainLiverRaw.pdf"), width = 5, height = 4.5)
-matplot(x = output$x, output$densityMat, type = "l", lty = 1, 
+matplot(x = output$x, output$densityMat, type = "l", 
         col = colCombined[factor(pdSub$series[c(73:82,11:18,42:53,1:10,19:41,54:72)])],
-        xlab = "log2 PM values", ylab = " ", lwd = 2)
+        xlab = "log2 PM values", ylab = " ", lwd = 2, 
+        lty=c(2,1,1,2,2,2)[factor(pdSub$series[c(73:82,11:18,42:53,1:10,19:41,54:72)])])
 legend('topright', 
        c("Brain (GSE17612, n=23)", "Brain (GSE21935, n=19)", 
          "Liver (GSE29721, n=10)", "Liver (GSE14668, n=20)", "Liver (GSE6764, n=10)"),
-       lwd = 2, col = c(colGreen[c(7,5)], colRed[c(7,5,4)]))
+       lwd = 2, col = c(colGreen[c(7,5)], colRed[c(7,5,4)]), lty=c(1,1,2,2,2))
 dev.off()
 
 object <- log2pmMatQN
 output <- getdensity(object)
 pdf(file.path(fig_path, "Figures/Figure1-supp/Figure1_brainLiverQN.pdf"), width = 5, height = 4.5)
-matplot(x = output$x, output$densityMat, type = "l", lty = 1, 
+matplot(x = output$x, output$densityMat, type = "l", 
         col = c(colGreen[6], colRed[6])[factor(pdSub$tissue)], 
-        xlab = "log2 PM values", ylab = " ", lwd = 2, ylim = c(0, 1.2))
-legend('topright', c("Brain", "Liver"), lwd = 2, col = c(colGreen[6], colRed[6]))
+        xlab = "log2 PM values", ylab = " ", lwd = 2, ylim = c(0, 1.2), 
+        lty=c(1,2)[factor(pdSub$tissue)])
+legend('topright', c("Brain", "Liver"), lwd = 2, 
+       col = c(colGreen[6], colRed[6]), lty=c(1,2))
 dev.off()
 
 object <- log2pmMatQS
 output <- getdensity(object)
 pdf(file.path(fig_path, "Figures/Figure1-supp/Figure1_brainLiverQS.pdf"), width = 5, height = 4.5)
-matplot(x = output$x, output$densityMat, type = "l", lty = 1, 
+matplot(x = output$x, output$densityMat, type = "l",
         col = c(colGreen[6], colRed[6])[factor(pdSub$tissue)], 
-        xlab = "log2 PM values", ylab = " ", lwd = 2, ylim = c(0, 1.2))
-legend('topright', c("Brain", "Liver"), lwd = 2, col = c(colGreen[6], colRed[6]))
+        xlab = "log2 PM values", ylab = " ", lwd = 2, ylim = c(0, 1.2), 
+        lty=c(1,2)[factor(pdSub$tissue)])
+legend('topright', c("Brain", "Liver"), lwd = 2, 
+       col = c(colGreen[6], colRed[6]), lty=c(1,2))
 dev.off()
 
 ```
@@ -199,37 +204,42 @@ dim(subdataRat)
 ## Density plot
 pdf(file.path(fig_path, "Figures/rat_density_liver_brain.pdf"),
     width = 8, height = 10)
-par(mfrow=c(1,1))
-par(mar=c(2, 2, 1, .5), mgp=c(0.7, 0.1, 0), tck=0.02)
+par(mfrow=c(3,2),mar=c(2, 2, 1, .5), mgp=c(0.7, 0.1, 0), tck=0.02)
 
 lpcounts = log2(exprs(subdataRat) + 1)  
 matdensity(lpcounts, groupFactor=pData(subdataRat)$organ, 
-           ylim = c(0, 0.17), xlab="log2(count + 1)", ylab=" ")
+           ylim = c(0, 0.17), xlab="log2(count + 1)", ylab=" ", 
+           lty = c(1,2)[factor(pData(subdataRat)$organ)])
 
 # spike-ins only
 lpcounts.raw.ercc = lpcounts[grep("^ERCC", rownames(lpcounts)), ]
 matdensity(lpcounts.raw.ercc, groupFactor=pData(subdataRat)$organ, 
-           ylim = c(0, 0.13), xlab="log2(count + 1)", ylab=" ")
+           ylim = c(0, 0.13), xlab="log2(count + 1)", ylab=" ", 
+           lty = c(1,2)[factor(pData(subdataRat)$organ)])
 
 lpcounts = preprocessCore::normalize.quantiles(log2(exprs(subdataRat)+1))
 rownames(lpcounts) <- rownames(exprs(subdataRat))
 matdensity(lpcounts, groupFactor=pData(subdataRat)$organ, 
-           ylim = c(0, 0.17), xlab="log2(count + 1)", ylab=" ")
+           ylim = c(0, 0.17), xlab="log2(count + 1)", ylab=" ", 
+           lty = c(1,2)[factor(pData(subdataRat)$organ)])
 
 # spike-ins only
 lpcounts.qn.ercc = lpcounts[grep("^ERCC", rownames(lpcounts)), ]
 matdensity(lpcounts.qn.ercc, groupFactor=pData(subdataRat)$organ, 
-           ylim = c(0, 0.13), xlab="log2(count + 1)", ylab=" ")
+           ylim = c(0, 0.13), xlab="log2(count + 1)", ylab=" ", 
+           lty = c(1,2)[factor(pData(subdataRat)$organ)])
 
 counts = exprs(subdataRat)
 lpcounts = qsmoothData(qsmooth(log2(counts+1), groupFactor = pData(subdataRat)$organ))
 matdensity(lpcounts, groupFactor=pData(subdataRat)$organ, 
-           ylim = c(0, 0.17), xlab="log2(count + 1)", ylab=" ")
+           ylim = c(0, 0.17), xlab="log2(count + 1)", ylab=" ", 
+           lty = c(1,2)[factor(pData(subdataRat)$organ)])
 
 # spike-ins only
 lpcounts.qs.ercc = lpcounts[grep("^ERCC", rownames(lpcounts)), ]
 matdensity(lpcounts.qs.ercc, groupFactor=pData(subdataRat)$organ, 
-           ylim = c(0, 0.13), xlab="log2(count + 1)", ylab=" ")
+           ylim = c(0, 0.13), xlab="log2(count + 1)", ylab=" ", 
+           lty = c(1,2)[factor(pData(subdataRat)$organ)])
 dev.off()
 ```
 
@@ -283,39 +293,49 @@ pdf(file.path(fig_path, "Figures/FlowSorted_density_boxplot_pca_BetaValues.pdf")
 # raw 
 par(mfrow=c(3,3))
 matdensity(p0, groupFactor = pd0$CellType, xlab = "beta values", ylab = "density", 
-           main = "raw (no normalization)", xlim = c(-7, 7))
-legend('top', levels(factor(pd0$CellType)), lty = 1, col = 1:6, lwd = 3)
+           main = "raw (no normalization)", lty=c(1:6)[factor(pd0$CellType)])
+legend('top', levels(factor(pd0$CellType)), col = 1:6, lwd = 3, lty=1:6)
 
 matboxplot(p0, groupFactor = pd0$CellType, main = "raw (no normalization)", 
           ylab = "beta values", names = pd0$CellType)
 
 s.raw <- svd(p0)
 scores <- data.frame(pd0, s.raw$v[, 1:4])
-plot(scores$X1, scores$X2, pch = 16, col = c(1:6)[factor(pd0$CellType)], 
+plot(scores$X1, scores$X2, pch = c(15:18,3:4)[factor(pd0$CellType)], 
+     col = c(1:6)[factor(pd0$CellType)], 
      xlab = "PC1", ylab = "PC2",  main = "raw (no normalization)")
 
 # qn
 p0.qn <- preprocessCore::normalize.quantiles(p0)
 matdensity(p0.qn, groupFactor = pd0$CellType,  main = "quantile normalization", 
-           xlab = "beta values", ylab = "density", xlim=c(-7, 7))
-legend('top', levels(factor(pd0$CellType)), lty = 1, col = 1:6, lwd = 3)
+           xlab = "beta values", ylab = "density", 
+           lty=c(1:6)[factor(pd0$CellType)])
+legend('top', levels(factor(pd0$CellType)), col = 1:6, lwd = 3, lty=1:6)
+
 matboxplot(p0.qn, groupFactor = pd0$CellType, main = "quantile normalization", 
           ylab = "beta values", names = pd0$CellType)
+
 s.qn <- svd(p0.qn)
 scores <- data.frame(pd0, s.qn$v[, 1:4])
-plot(scores$X1, scores$X2, pch = 16, col =  c(1:6)[factor(pd0$CellType)], 
+plot(scores$X1, scores$X2, pch = c(15:18,3:4)[factor(pd0$CellType)], 
+     col =  c(1:6)[factor(pd0$CellType)], 
      xlab = "PC1", ylab = "PC2",  main = "quantile normalization")
 
 # qsmooth
-p0.qs <- qsmoothData(qsmooth(p0, groupFactor = factor(pd0$CellType)))
-matdensity(p0.qs, groupFactor = pd0$CellType, main = "qsmooth", 
-          xlab = "beta values", ylab = "density")
-legend('top', levels(factor(pd0$CellType)), lty = 1, col = 1:6, lwd = 3)
-matboxplot(p0.qs, groupFactor = pd0$CellType, main = "qsmooth", 
-          ylab = "beta values", names = pd0$CellType)
-s.qs <- svd(p0.qs)
+betaFlowSortedBlood450kQsmooth <- qsmoothData(qsmooth(p0, groupFactor = factor(pd0$CellType)))
+# load(file.path(fig_path,"data/betaFlowSortedBlood450kQsmooth.RData"))
+matdensity(betaFlowSortedBlood450kQsmooth, groupFactor = pd0$CellType, 
+           main = "qsmooth", xlab = "beta values", ylab = "density", 
+           lty=c(1:6)[factor(pd0$CellType)])
+legend('top', levels(factor(pd0$CellType)), col = 1:6, lwd = 3, lty=1:6)
+
+matboxplot(betaFlowSortedBlood450kQsmooth, groupFactor = pd0$CellType, 
+           main = "qsmooth", ylab = "beta values", names = pd0$CellType)
+
+s.qs <- svd(betaFlowSortedBlood450kQsmooth)
 scores <- data.frame(pd0, s.qs$v[, 1:4])
-plot(scores$X1, scores$X2, pch = 16, col =  c(1:6)[factor(pd0$CellType)], 
+plot(scores$X1, scores$X2, pch = c(15:18,3:4)[factor(pd0$CellType)], 
+     col =  c(1:6)[factor(pd0$CellType)], 
      xlab = "PC1", ylab = "PC2",  main = "qsmooth")
 dev.off()
 
